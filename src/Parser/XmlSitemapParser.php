@@ -16,7 +16,7 @@ class XmlSitemapParser implements SitemapParserInterface
         return 'sitemapindex' === $this->xml->getName();
     }
 
-    public function parse(): iterable
+    public function getIterator(): \Traversable
     {
         foreach ($this->xml as $child) {
             // @phpstan-ignore-next-line

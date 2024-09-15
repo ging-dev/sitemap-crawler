@@ -13,7 +13,7 @@ class RobotsTxtParser implements SitemapParserInterface
         return true;
     }
 
-    public function parse(): iterable
+    public function getIterator(): \Traversable
     {
         preg_match_all('/^Sitemap:\s*(.+)$/mi', $this->data, $matches);
 

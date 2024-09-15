@@ -5,13 +5,10 @@ namespace Gingdev\Crawler\Parser;
 /**
  * @phpstan-type ChangeFreqType = 'always'|'hourly'|'daily'|'weekly'|'monthly'|'yearly'|'never'
  * @phpstan-type UrlType = array{loc: string, lastmod?: string, changefreq?: ChangeFreqType, priority?: string}
+ *
+ * @extends \IteratorAggregate<UrlType>
  */
-interface SitemapParserInterface
+interface SitemapParserInterface extends \IteratorAggregate
 {
-    /**
-     * @return iterable<UrlType>
-     */
-    public function parse(): iterable;
-
     public function isSitemapIndex(): bool;
 }

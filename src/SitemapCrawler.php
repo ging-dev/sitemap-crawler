@@ -31,7 +31,7 @@ final class SitemapCrawler
         $contentType = explode(';', $response->getHeaders()['content-type'][0] ?? '')[0];
         $data = $response->getContent();
 
-        set_error_handler(static fn () => null);
+        set_error_handler(null);
         try {
             /** @var SitemapParserInterface */
             $parser = match ($contentType) {
@@ -43,7 +43,7 @@ final class SitemapCrawler
         }
 
         /** @var UrlType[] */
-        $urls = array_filter(iterator_to_array($parser->parse()), $filter);
+        $urls = array_filter(iterator_to_array($parser->getIterator()), $filter);
 
         if (!$parser->isSitemapIndex()) {
             yield from $urls;
