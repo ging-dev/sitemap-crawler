@@ -2,13 +2,14 @@
 
 namespace Gingdev\Crawler;
 
+use Gingdev\Crawler\Parser\RobotsTxtParser;
+use Gingdev\Crawler\Parser\SitemapParserInterface;
+use Gingdev\Crawler\Parser\XmlSitemapParser;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * @phpstan-type ChangeFreqType = 'always'|'hourly'|'daily'|'weekly'|'monthly'|'yearly'|'never'
- * @phpstan-type UrlType = object{loc: string, lastmod?: string, changefreq?: ChangeFreqType, priority?: string}
- * @phpstan-type SitemapType = array{sitemap?: UrlType[], url?: UrlType[]}
+ * @phpstan-import-type UrlType from SitemapParserInterface
  */
 final class SitemapCrawler
 {
@@ -22,26 +23,36 @@ final class SitemapCrawler
     /**
      * @param callable(UrlType):bool|null $filter
      *
-     * @return iterable<UrlType>
+     * @return \Generator<int, UrlType, mixed, void>
      */
-    public function index(string $url, ?callable $filter = null): iterable
+    public function index(string $url, ?callable $filter = null): \Generator
     {
         $response = $this->client->request('GET', $url);
-
+        $contentType = explode(';', $response->getHeaders()['content-type'][0] ?? '')[0];
         $data = $response->getContent();
 
-        // try to decode if data is gz format
-        $data = @gzdecode($data) ?: $data;
-
-        /** @var SitemapType */
-        $parser = (array) new \SimpleXMLElement($data);
-
-        foreach (array_filter($parser['sitemap'] ?? [], $filter) as $url) {
-            yield from $this->index($url->loc, $filter);
+        set_error_handler(static fn () => null);
+        try {
+            /** @var SitemapParserInterface */
+            $parser = match ($contentType) {
+                'text/plain' => new RobotsTxtParser($data),
+                default => new XmlSitemapParser(@gzdecode($data) ?: $data),
+            };
+        } finally {
+            restore_error_handler();
         }
 
-        foreach (array_filter($parser['url'] ?? [], $filter) as $url) {
-            yield $url;
+        /** @var UrlType[] */
+        $urls = array_filter(iterator_to_array($parser->parse()), $filter);
+
+        if (!$parser->isSitemapIndex()) {
+            yield from $urls;
+
+            return;
+        }
+
+        foreach ($urls as $sitemap) {
+            yield from $this->index($sitemap['loc'], $filter);
         }
     }
 }
