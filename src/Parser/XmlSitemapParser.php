@@ -11,7 +11,7 @@ class XmlSitemapParser implements SitemapParserInterface
         $this->xml = new \SimpleXMLElement($data);
     }
 
-    public function isSitemapIndex(): bool
+    public function mustIndex(): bool
     {
         return 'sitemapindex' === $this->xml->getName();
     }

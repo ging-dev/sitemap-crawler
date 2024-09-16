@@ -10,5 +10,5 @@ namespace Gingdev\Crawler\Parser;
  */
 interface SitemapParserInterface extends \IteratorAggregate
 {
-    public function isSitemapIndex(): bool;
+    public function mustIndex(): bool;
 }

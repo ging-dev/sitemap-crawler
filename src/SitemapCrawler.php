@@ -42,17 +42,17 @@ final class SitemapCrawler
             restore_error_handler();
         }
 
-        /** @var UrlType[] */
-        $urls = array_filter(iterator_to_array($parser->getIterator()), $filter);
+        foreach ($parser->getIterator() as $url) {
+            if (is_callable($filter) && !call_user_func($filter, $url)) {
+                continue;
+            }
+            if ($parser->mustIndex()) {
+                yield from $this->index($url['loc'], $filter);
 
-        if (!$parser->isSitemapIndex()) {
-            yield from $urls;
+                continue;
+            }
 
-            return;
-        }
-
-        foreach ($urls as $sitemap) {
-            yield from $this->index($sitemap['loc'], $filter);
+            yield $url;
         }
     }
 }

@@ -8,7 +8,7 @@ class RobotsTxtParser implements SitemapParserInterface
     {
     }
 
-    public function isSitemapIndex(): bool
+    public function mustIndex(): bool
     {
         return true;
     }
